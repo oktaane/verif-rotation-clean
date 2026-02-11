@@ -1,0 +1,13 @@
+{
+  "name": "roadtrips-api",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "fastify": "4.29.1",
+    "@fastify/multipart": "8.3.0",
+    "@fastify/cors": "8.2.1",
+    "@fastify/formbody": "7.4.0",
+    "papaparse": "5.4.1",
+    "undici": "6.19.8"
+  }
+}

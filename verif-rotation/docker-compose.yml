@@ -1,0 +1,45 @@
+services:
+  osrm-init:
+    profiles: ["init"]
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    container_name: osrm-init
+    working_dir: /data
+    volumes:
+      - ./data/osrm:/data
+      - ./osrm-init.sh:/osrm-init.sh:ro
+    command: ["sh", "/osrm-init.sh"]
+    restart: "no"
+
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    container_name: osrm
+    volumes:
+      - ./data/osrm:/data
+    command: ["osrm-routed", "--algorithm", "ch", "/data/idf-latest.osrm"]
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    environment:
+      - OSRM_BASE_URL=http://osrm:5000
+      - API_PORT=4000
+      - CORS_ORIGIN=http://localhost:5173
+      - EMP_REF_PATH=/data/empExportBdd.csv
+    volumes:
+      - ./data:/data
+    depends_on:
+      - osrm
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    container_name: web
+    depends_on:
+      - api
+    ports:
+      - "5173:80"
+    restart: unless-stopped
