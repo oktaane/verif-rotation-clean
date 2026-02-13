@@ -1,42 +1,69 @@
 services:
-  osrm-init:
-    profiles: ["init"]
+  # --- IDF (CH) ---
+  osrm-init-idf:
     image: ghcr.io/project-osrm/osrm-backend:latest
-    container_name: osrm-init
+    container_name: osrm-init-idf
     working_dir: /data
     volumes:
-      - ./data/osrm:/data
-      - ./osrm-init.sh:/osrm-init.sh:ro
+      - ./data/osrm/idf:/data
+      - ./osrm-init-idf.sh:/osrm-init.sh:ro
+      # Si ton init IDF télécharge lui-même, monte aussi son script de download si séparé.
+      # - ./osrm-pbf-idf.sh:/osrm-pbf-idf.sh:ro
     command: ["sh", "/osrm-init.sh"]
     restart: "no"
 
-  osrm:
+  osrm-idf:
     image: ghcr.io/project-osrm/osrm-backend:latest
-    container_name: osrm
+    container_name: osrm-idf
     volumes:
-      - ./data/osrm:/data
+      - ./data/osrm/idf:/data
     command: ["osrm-routed", "--algorithm", "ch", "/data/idf-latest.osrm"]
     ports:
       - "5000:5000"
     restart: unless-stopped
 
+  # --- FRANCE (MLD) ---
+  osrm-init-fr:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    container_name: osrm-init-fr
+    working_dir: /data
+    volumes:
+      - ./data/osrm/france:/data
+      - ./osrm-init-fr.sh:/osrm-init.sh:ro
+    command: ["sh", "/osrm-init.sh"]
+    restart: "no"
+
+  osrm-fr:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    container_name: osrm-fr
+    volumes:
+      - ./data/osrm/france:/data
+    command: ["osrm-routed", "--algorithm", "mld", "/data/france-latest.osrm"]
+    ports:
+      - "5001:5000"
+    restart: unless-stopped
+
   api:
     build: ./api
     environment:
-      - OSRM_BASE_URL=http://osrm:5000
+      - OSRM_IDF_URL=http://osrm-idf:5000
+      - OSRM_FR_URL=http://osrm-fr:5000
       - API_PORT=4000
       - CORS_ORIGIN=http://localhost:5173
       - EMP_REF_PATH=/data/empExportBdd.csv
     volumes:
       - ./data:/data
     depends_on:
-      - osrm
+      - osrm-idf
+      - osrm-fr
     ports:
       - "4000:4000"
     restart: unless-stopped
-
+  
   web:
-    build: ./web
+    build:
+      context: ./web
+      dockerfile: Dockerfile
     container_name: web
     depends_on:
       - api

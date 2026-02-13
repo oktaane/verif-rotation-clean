@@ -1,2 +1,31 @@
-verif-rotation/data/osrm/
+# --- Node / JS ---
+node_modules/
+**/node_modules/
 
+# Builds front-end
+dist/
+**/dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Docker stuff
+docker-compose.override.yml
+
+# Ignorer les données runtime OSRM
+verif-rotation/data/osrm/
